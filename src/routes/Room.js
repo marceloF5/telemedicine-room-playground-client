@@ -13,7 +13,10 @@ const Container = styled.div`
     flex-wrap: wrap;
 `;
 
-const StyledVideo = styled.video``
+const StyledVideo = styled.video`
+    height: 40%;
+    width: 50%;
+`;
 
 const Video = (props) => {
     const guestHostStreamRef = useRef();
@@ -32,15 +35,19 @@ const Video = (props) => {
 const Room = (props) => {
     const [hostStream, setHostStream] = useState(null)
     const [peers, setPeers] = useState([]);
+    const [mute, setMute] = useState(false)
     const socketRef = useRef();
-    const userVideo = useRef();
     const peersRef = useRef([]);
-    const roomID = props.match.params.roomID;
+    const roomID = 1;
 
     useEffect(() => {
         if(hostStream) {
-            socketRef.current = io.connect("/");
-            userVideo.current.srcObject = hostStream;
+            socketRef.current = io('https://telemedicine-room-server.herokuapp.com', {
+                secure: true,
+                reconnection: true,
+                rejectUnauthorized: false,
+                reconnectionAttempts: 10
+            });
             socketRef.current.emit("join room", roomID);
             socketRef.current.on("all users", users => {
                 const peers = [];
@@ -80,6 +87,7 @@ const Room = (props) => {
                 removePeer(userDisconnected)
             })
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hostStream]);
 
     function createPeer(userToSignal, callerID, stream) {
@@ -113,27 +121,36 @@ const Room = (props) => {
     }
 
     function removePeer(userDisconnected) {
-
+        console.log("🚀 ~ file: Room.js ~ line 124 ~ removePeer ~ userDisconnected", userDisconnected)
+        const user = peersRef.current.filter(peer => peer.peerID !== userDisconnected)
+        
+        console.log("🚀 ~ file: Room.js ~ line 124 ~ removePeer ~ peersRef", peersRef.current)
+        console.log("🚀 ~ file: Room.js ~ line 124 ~ removePeer ~ user", user)
     }
 
-    function toggleAudio() {
-        hostStream.getAudioTracks().map((track) => {
-            track.enabled = !track.enabled
-        })
+    function toggleAudio(mute) {
+        hostStream.getAudioTracks().map((track) => track.enabled = !mute)
+
+        setMute(!mute)
     }
 
     function toggleVideo() {
-        hostStream.getVideoTracks().map((track) => {
-            track.enabled = !track.enabled
-        })
+        hostStream.getVideoTracks().map((track) => track.enabled = !track.enabled)
     }
 
     return (
         <Container>
-            <Webcam audio={false} onUserMedia={(stream) => setHostStream(stream)} ref={userVi}/>
-            <button onClick={toggleAudio}>Mute</button>
+            <Webcam onUserMedia={(stream) => setHostStream(stream)} />
+            {mute ?
+                <button onClick={()=>toggleAudio(mute)}>Mute On</button>
+                :
+                <button onClick={()=>toggleAudio(mute)}>Mute Off</button>
+            }            
+            
             <button onClick={toggleVideo}>Video</button>
             {peers.map((peer, index) => {
+        console.log("🚀 ~ file: Room.js ~ line 153 ~ removePeer ~ peersRef", peersRef)
+        console.log("🚀 ~ file: Room.js ~ line 153 ~ removePeer ~ peersRef", peersRef)
                 return (
                     <Video key={index} peer={peer} />
                 );
