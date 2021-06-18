@@ -83,6 +83,10 @@ const Room = (props) => {
                 item.peer.signal(payload.signal);
             });
 
+            socketRef.current.on('room full', ()=>{
+                props.history.push('/create-room');
+            })
+
             socketRef.current.on('user disconnected', userDisconnected => {
                 removePeer(userDisconnected)
             })
@@ -121,17 +125,16 @@ const Room = (props) => {
     }
 
     function removePeer(userDisconnected) {
-        console.log("🚀 ~ file: Room.js ~ line 124 ~ removePeer ~ userDisconnected", userDisconnected)
-        const user = peersRef.current.filter(peer => peer.peerID !== userDisconnected)
-        
-        console.log("🚀 ~ file: Room.js ~ line 124 ~ removePeer ~ peersRef", peersRef.current)
-        console.log("🚀 ~ file: Room.js ~ line 124 ~ removePeer ~ user", user)
+        const users = peersRef.current.filter(peer => peer.peerID !== userDisconnected)
+
+        setPeers(users.map(user => user.peer));
     }
 
-    function toggleAudio(mute) {
-        hostStream.getAudioTracks().map((track) => track.enabled = !mute)
-
-        setMute(!mute)
+    function toggleAudio() {
+        hostStream.getAudioTracks().map((track) => {
+            track.enabled = !track.enabled
+            setMute(!track.enabled)
+        })
     }
 
     function toggleVideo() {
@@ -142,19 +145,13 @@ const Room = (props) => {
         <Container>
             <Webcam onUserMedia={(stream) => setHostStream(stream)} />
             {mute ?
-                <button onClick={()=>toggleAudio(mute)}>Mute On</button>
+                <button onClick={toggleAudio}>Mute On</button>
                 :
-                <button onClick={()=>toggleAudio(mute)}>Mute Off</button>
+                <button onClick={toggleAudio}>Mute Off</button>
             }            
             
             <button onClick={toggleVideo}>Video</button>
-            {peers.map((peer, index) => {
-        console.log("🚀 ~ file: Room.js ~ line 153 ~ removePeer ~ peersRef", peersRef)
-        console.log("🚀 ~ file: Room.js ~ line 153 ~ removePeer ~ peersRef", peersRef)
-                return (
-                    <Video key={index} peer={peer} />
-                );
-            })}
+            {peers.map((peer, index) => <Video key={index} peer={peer} /> )}
         </Container>
     );
 };

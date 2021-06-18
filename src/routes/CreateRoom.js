@@ -4,7 +4,7 @@ import React from "react";
 const CreateRoom = (props) => {
     function create() {
         // const id = uuid();
-        props.history.push('/room/');
+        props.history.push('/');
     }
 
     return (
