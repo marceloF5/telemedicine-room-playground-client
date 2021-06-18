@@ -132,8 +132,11 @@ const Room = (props) => {
 
     function toggleAudio() {
         hostStream.getAudioTracks().map((track) => {
-            track.enabled = !track.enabled
+
             setMute(!track.enabled)
+
+            return track.enabled = !track.enabled
+
         })
     }
 
